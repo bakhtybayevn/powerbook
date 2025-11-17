@@ -1,0 +1,20 @@
+# Binaries
+bin/
+*.exe
+
+# Go build files
+*.out
+
+# IDE
+.vscode/
+
+# Swagger generated files
+internal/adapters/http/docs/*
+
+# But KEEP go files inside swagger docs folder
+!internal/adapters/http/docs/*.go
+!internal/adapters/http/docs/swagger.json
+!internal/adapters/http/docs/swagger.yaml
+
+# Config files
+config.yaml
