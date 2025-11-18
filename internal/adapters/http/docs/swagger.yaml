@@ -1,5 +1,57 @@
 basePath: /
 definitions:
+  dto.CompetitionResponse:
+    properties:
+      end_date:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      points_per_minute:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.CreateCompetitionRequest:
+    properties:
+      end_date:
+        example: "2025-01-31T23:59:59Z"
+        type: string
+      name:
+        example: January Reading Contest
+        type: string
+      points_per_minute:
+        example: 1
+        type: integer
+      start_date:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+    type: object
+  dto.LogReadingRequest:
+    properties:
+      minutes:
+        example: 20
+        type: integer
+      source:
+        description: 'allowed: web, app, tg'
+        example: web
+        type: string
+      timestamp:
+        example: "2025-11-18T12:34:56Z"
+        type: string
+    type: object
+  dto.LogReadingResponse:
+    properties:
+      new_streak:
+        example: 3
+        type: integer
+      total_minutes_logged:
+        example: 320
+        type: integer
+    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -42,7 +94,104 @@ info:
   title: PowerBook API
   version: "1.0"
 paths:
-  /users/login:
+  /api/v1/competitions/{id}/close:
+    post:
+      parameters:
+      - description: Competition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Close competition and compute winners
+      tags:
+      - competition
+  /api/v1/competitions/{id}/join:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Competition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Join a competition
+      tags:
+      - competition
+  /api/v1/competitions/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Competition info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCompetitionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CompetitionResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new competition
+      tags:
+      - competition
+  /api/v1/reading/log:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Reading data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LogReadingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LogReadingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Log reading minutes for authenticated user
+      tags:
+      - reading
+  /api/v1/users/login:
     post:
       consumes:
       - application/json
@@ -63,7 +212,7 @@ paths:
       summary: Login user
       tags:
       - auth
-  /users/me:
+  /api/v1/users/me:
     get:
       produces:
       - application/json
@@ -79,7 +228,7 @@ paths:
       summary: Get authenticated user info
       tags:
       - users
-  /users/register:
+  /api/v1/users/register:
     post:
       consumes:
       - application/json

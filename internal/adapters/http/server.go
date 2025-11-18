@@ -3,10 +3,12 @@ package http
 import (
 	"net/http"
 
-	userHandlers "github.com/bakhtybayevn/powerbook/internal/adapters/http/handlers"
+	"github.com/bakhtybayevn/powerbook/internal/adapters/http/handlers"
 	"github.com/bakhtybayevn/powerbook/internal/adapters/http/middleware"
 	jwtToken "github.com/bakhtybayevn/powerbook/internal/adapters/http/token"
 	memrepo "github.com/bakhtybayevn/powerbook/internal/adapters/postgres"
+	appCompetition "github.com/bakhtybayevn/powerbook/internal/application/competition"
+	appReading "github.com/bakhtybayevn/powerbook/internal/application/reading"
 	appUser "github.com/bakhtybayevn/powerbook/internal/application/user"
 	"github.com/bakhtybayevn/powerbook/internal/config"
 
@@ -43,20 +45,30 @@ func (s *Server) RegisterRoutes() {
 	// === DEPENDENCIES (temporary in-memory) ===
 	userRepo := memrepo.NewInMemoryUserRepo()
 	tokenService := jwtToken.NewJWTService("supersecret")
+	readingRepo := memrepo.NewInMemoryReadingRepo()
+	competitionRepo := memrepo.NewInMemoryCompetitionRepo()
 
 	// === USE CASES ===
 	registerUserHandler := appUser.NewRegisterUserHandler(userRepo)
 	loginUserHandler := appUser.NewLoginUserHandler(userRepo, tokenService)
+	logReadingHandler := appReading.NewLogReadingHandler(userRepo, readingRepo, competitionRepo)
+	createCompetitionHandler := appCompetition.NewCreateCompetitionHandler(competitionRepo)
+	joinCompetitionHandler := appCompetition.NewJoinCompetitionHandler(competitionRepo)
+	closeCompetitionHandler := appCompetition.NewCloseCompetitionHandler(competitionRepo)
 
 	// === API VERSIONING (/api/v1) ===
 	v1 := s.router.Group("/api/v1")
 
 	// ---- Public endpoints ----
-	v1.POST("/users/register", userHandlers.RegisterUser(registerUserHandler))
-	v1.POST("/users/login", userHandlers.LoginUser(loginUserHandler))
+	v1.POST("/users/register", handlers.RegisterUser(registerUserHandler))
+	v1.POST("/users/login", handlers.LoginUser(loginUserHandler))
 
 	// ---- Protected endpoints ----
 	auth := v1.Group("/")
 	auth.Use(middleware.AuthMiddleware(tokenService))
-	auth.GET("/users/me", userHandlers.GetMe(userRepo))
+	auth.GET("/users/me", handlers.GetMe(userRepo))
+	auth.POST("/reading/log", handlers.LogReading(logReadingHandler))
+	auth.POST("/competitions/create", handlers.CreateCompetition(createCompetitionHandler))
+	auth.POST("/competitions/:id/join", handlers.JoinCompetition(joinCompetitionHandler))
+	auth.POST("/competitions/:id/close", handlers.CloseCompetition(closeCompetitionHandler))
 }

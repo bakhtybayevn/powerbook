@@ -16,7 +16,7 @@ import (
 // @Produce json
 // @Param request body dto.RegisterUserRequest true "User info"
 // @Success 200 {object} dto.RegisterUserResponse
-// @Router /users/register [post]
+// @Router /api/v1/users/register [post]
 func RegisterUser(handler *appUser.RegisterUserHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.RegisterUserRequest

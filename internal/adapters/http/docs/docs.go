@@ -15,7 +15,165 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users/login": {
+        "/api/v1/competitions/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Create a new competition",
+                "parameters": [
+                    {
+                        "description": "Competition info",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCompetitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CompetitionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/competitions/{id}/close": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Close competition and compute winners",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Competition ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/competitions/{id}/join": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Join a competition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Competition ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reading/log": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "Log reading minutes for authenticated user",
+                "parameters": [
+                    {
+                        "description": "Reading data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LogReadingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LogReadingResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/login": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -48,7 +206,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/me": {
+        "/api/v1/users/me": {
             "get": {
                 "security": [
                     {
@@ -75,7 +233,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register": {
+        "/api/v1/users/register": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -110,6 +268,81 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.CompetitionResponse": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "points_per_minute": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateCompetitionRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-01-31T23:59:59Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "January Reading Contest"
+                },
+                "points_per_minute": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.LogReadingRequest": {
+            "type": "object",
+            "properties": {
+                "minutes": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "source": {
+                    "description": "allowed: web, app, tg",
+                    "type": "string",
+                    "example": "web"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2025-11-18T12:34:56Z"
+                }
+            }
+        },
+        "dto.LogReadingResponse": {
+            "type": "object",
+            "properties": {
+                "new_streak": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "total_minutes_logged": {
+                    "type": "integer",
+                    "example": 320
+                }
+            }
+        },
         "dto.LoginRequest": {
             "type": "object",
             "properties": {
