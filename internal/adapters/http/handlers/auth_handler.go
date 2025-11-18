@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/bakhtybayevn/powerbook/internal/adapters/http/dto"
+	"github.com/bakhtybayevn/powerbook/internal/adapters/http/response"
 	appUser "github.com/bakhtybayevn/powerbook/internal/application/user"
+	"github.com/bakhtybayevn/powerbook/internal/core"
 )
 
 // LoginUser godoc
@@ -21,7 +21,7 @@ func LoginUser(handler *appUser.LoginUserHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.Error(core.New(core.ValidationError, err.Error()))
 			return
 		}
 
@@ -32,10 +32,10 @@ func LoginUser(handler *appUser.LoginUserHandler) gin.HandlerFunc {
 
 		token, err := handler.Handle(cmd)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.Error(err)
 			return
 		}
 
-		c.JSON(http.StatusOK, dto.LoginResponse{Token: token})
+		response.JSON(c, dto.LoginResponse{Token: token})
 	}
 }

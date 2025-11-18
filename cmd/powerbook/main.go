@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-
-	"github.com/gin-gonic/gin"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	httpAdapter "github.com/bakhtybayevn/powerbook/internal/adapters/http"
+	"github.com/gin-gonic/gin"
+
 	_ "github.com/bakhtybayevn/powerbook/internal/adapters/http/docs"
 	"github.com/bakhtybayevn/powerbook/internal/config"
 )
@@ -28,17 +34,37 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	fmt.Printf("Starting powerbook in %s mode on port %d\n", cfg.App.Environment, cfg.App.Port)
-
 	router := gin.Default()
 
-	// initialize HTTP server (handlers)
-	srv := httpAdapter.NewServer(router, cfg)
-	srv.RegisterRoutes()
+	server := httpAdapter.NewServer(router, cfg)
+	server.RegisterRoutes()
 
-	// start server
-	addr := fmt.Sprintf(":%d", cfg.App.Port)
-	if err := router.Run(addr); err != nil {
-		log.Fatalf("failed to run server: %v", err)
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.App.Port),
+		Handler: router,
 	}
+
+	// Run server in background goroutine
+	go func() {
+		fmt.Printf("Starting PowerBook API on port %d...\n", cfg.App.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server startup error: %v", err)
+		}
+	}()
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+
+	fmt.Println("Shutting down PowerBook API...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Forced shutdown: %v", err)
+	}
+
+	fmt.Println("PowerBook API stopped gracefully.")
 }

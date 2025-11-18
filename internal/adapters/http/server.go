@@ -9,6 +9,7 @@ import (
 	memrepo "github.com/bakhtybayevn/powerbook/internal/adapters/postgres"
 	appUser "github.com/bakhtybayevn/powerbook/internal/application/user"
 	"github.com/bakhtybayevn/powerbook/internal/config"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -26,30 +27,36 @@ func NewServer(router *gin.Engine, cfg *config.Config) *Server {
 	}
 }
 
-// RegisterRoutes sets up routes including swagger and a test endpoint
 func (s *Server) RegisterRoutes() {
-	// Swagger UI
-	// Swagger JSON будет доступен по адресу: /swagger/doc.json
+	// === GLOBAL MIDDLEWARES ===
+	s.router.Use(middleware.ErrorMiddleware())
+	s.router.Use(middleware.CORSMiddleware())
+
+	// === SWAGGER ===
 	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Health endpoint
+	// === HEALTH CHECK ===
 	s.router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// in-memory repo
+	// === DEPENDENCIES (temporary in-memory) ===
 	userRepo := memrepo.NewInMemoryUserRepo()
 	tokenService := jwtToken.NewJWTService("supersecret")
 
-	loginUserHandler := appUser.NewLoginUserHandler(userRepo, tokenService)
+	// === USE CASES ===
 	registerUserHandler := appUser.NewRegisterUserHandler(userRepo)
+	loginUserHandler := appUser.NewLoginUserHandler(userRepo, tokenService)
 
-	authMiddleware := middleware.AuthMiddleware(tokenService)
-	auth := s.router.Group("/")
-	auth.Use(authMiddleware)
+	// === API VERSIONING (/api/v1) ===
+	v1 := s.router.Group("/api/v1")
+
+	// ---- Public endpoints ----
+	v1.POST("/users/register", userHandlers.RegisterUser(registerUserHandler))
+	v1.POST("/users/login", userHandlers.LoginUser(loginUserHandler))
+
+	// ---- Protected endpoints ----
+	auth := v1.Group("/")
+	auth.Use(middleware.AuthMiddleware(tokenService))
 	auth.GET("/users/me", userHandlers.GetMe(userRepo))
-
-	// User endpoints
-	s.router.POST("/users/register", userHandlers.RegisterUser(registerUserHandler))
-	s.router.POST("/users/login", userHandlers.LoginUser(loginUserHandler))
 }

@@ -1,11 +1,12 @@
 package handlers
 
 import (
-    "github.com/gin-gonic/gin"
-    "net/http"
+	"github.com/gin-gonic/gin"
 
-    "github.com/bakhtybayevn/powerbook/internal/adapters/http/dto"
-    appUser "github.com/bakhtybayevn/powerbook/internal/application/user"
+	"github.com/bakhtybayevn/powerbook/internal/adapters/http/dto"
+	"github.com/bakhtybayevn/powerbook/internal/adapters/http/response"
+	appUser "github.com/bakhtybayevn/powerbook/internal/application/user"
+	"github.com/bakhtybayevn/powerbook/internal/core"
 )
 
 // RegisterUser godoc
@@ -17,29 +18,29 @@ import (
 // @Success 200 {object} dto.RegisterUserResponse
 // @Router /users/register [post]
 func RegisterUser(handler *appUser.RegisterUserHandler) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        var req dto.RegisterUserRequest
-        if err := c.ShouldBindJSON(&req); err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-            return
-        }
+	return func(c *gin.Context) {
+		var req dto.RegisterUserRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.Error(core.New(core.ValidationError, err.Error()))
+			return
+		}
 
-        cmd := appUser.RegisterUserCommand{
-            Email:       req.Email,
-            DisplayName: req.DisplayName,
-            Password:    req.Password,
-        }
+		cmd := appUser.RegisterUserCommand{
+			Email:       req.Email,
+			DisplayName: req.DisplayName,
+			Password:    req.Password,
+		}
 
-        u, err := handler.Handle(cmd)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-            return
-        }
+		u, err := handler.Handle(cmd)
+		if err != nil {
+			c.Error(err)
+			return
+		}
 
-        c.JSON(http.StatusOK, dto.RegisterUserResponse{
-            ID:          u.ID,
-            Email:       u.Email,
-            DisplayName: u.DisplayName,
-        })
-    }
+		response.JSON(c, dto.RegisterUserResponse{
+			ID:          u.ID,
+			Email:       u.Email,
+			DisplayName: u.DisplayName,
+		})
+	}
 }
