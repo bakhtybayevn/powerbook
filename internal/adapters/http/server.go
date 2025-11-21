@@ -59,7 +59,7 @@ func (s *Server) RegisterRoutes() {
 	tokenService := jwtToken.NewJWTService(s.cfg.JWT.Secret)
 	readingRepo := postgres.NewPostgresReadingRepo(db)
 	competitionRepo := postgres.NewPostgresCompetitionRepo(db)
-	redisLB := redis.NewRedisLeaderboard(redisAddr)
+	redisLB := redis.NewRedisLeaderboard(redisAddr, s.cfg.Redis.Password, s.cfg.Redis.UseTLS)
 	lbHealth := middleware.RedisHealth(redisLB)
 
 	// === HANDLERS ===

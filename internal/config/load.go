@@ -53,6 +53,8 @@ func Load() (*Config, error) {
 	// REDIS
 	bind("redis.host", "REDIS_HOST")
 	bind("redis.port", "REDIS_PORT")
+	bind("redis.password", "REDIS_PASSWORD")
+	bind("redis.tls", "REDIS_TLS")
 
 	// JWT
 	bind("jwt.secret", "JWT_SECRET")

@@ -16,9 +16,10 @@ type DatabaseConfig struct {
 }
 
 type RedisConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
-	DB   int    `mapstructure:"db"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	UseTLS   bool   `mapstructure:"tls"`
 }
 
 type JWTConfig struct {

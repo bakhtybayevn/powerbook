@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 
 	"github.com/bakhtybayevn/powerbook/internal/ports"
@@ -12,12 +13,18 @@ type RedisLeaderboard struct {
 	client *redis.Client
 }
 
-func NewRedisLeaderboard(addr string) *RedisLeaderboard {
+func NewRedisLeaderboard(addr, password string, useTLS bool) *RedisLeaderboard {
+	opts := &redis.Options{
+		Addr:     addr,
+		Password: password,
+	}
+
+	if useTLS {
+		opts.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+	}
+
 	return &RedisLeaderboard{
-		client: redis.NewClient(&redis.Options{
-			Addr: addr,
-			DB:   0,
-		}),
+		client: redis.NewClient(opts),
 	}
 }
 
