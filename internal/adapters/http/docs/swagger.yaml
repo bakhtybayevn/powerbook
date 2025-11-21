@@ -139,6 +139,59 @@ paths:
       summary: Join a competition
       tags:
       - competition
+  /api/v1/competitions/{id}/leaderboard:
+    get:
+      parameters:
+      - description: Competition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Top N (default 50)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get competition leaderboard
+      tags:
+      - competition
+  /api/v1/competitions/{id}/rank/{userID}:
+    get:
+      parameters:
+      - description: Competition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user rank in competition leaderboard
+      tags:
+      - competition
   /api/v1/competitions/create:
     post:
       consumes:
@@ -249,6 +302,27 @@ paths:
       summary: Register a new user
       tags:
       - users
+  /competitions/{id}/rank/me:
+    get:
+      parameters:
+      - description: Competition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user's rank in competition
+      tags:
+      - competition
 securityDefinitions:
   BearerAuth:
     description: 'Enter: Bearer <token>'

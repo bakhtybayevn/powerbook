@@ -1,33 +1,66 @@
 package config
 
 import (
-    "github.com/spf13/viper"
-    "fmt"
+	"fmt"
+	"log"
+
+	"github.com/spf13/viper"
 )
 
 func Load() (*Config, error) {
-    v := viper.New()
-    v.SetConfigName("config")
-    v.SetConfigType("yaml")
-    v.AddConfigPath(".")
-    v.AddConfigPath("./config")
-    v.AutomaticEnv()
+	v := viper.New()
 
-    // defaults
-    v.SetDefault("app.environment", "development")
-    v.SetDefault("app.port", 8080)
-    v.SetDefault("postgres.dsn", "postgres://user:pass@localhost:5432/powerbook?sslmode=disable")
-    v.SetDefault("redis.addr", "localhost:6379")
-    v.SetDefault("telegram.token", "")
+	// CONFIG FILE
+	v.SetConfigName("config")
+	v.SetConfigType("yaml")
 
-    if err := v.ReadInConfig(); err != nil {
-        // not fatal - will use defaults and env vars
-        fmt.Println("config file not found, using defaults and environment variables")
-    }
+	// LOCAL dev paths
+	v.AddConfigPath("./internal/config")
+	v.AddConfigPath(".")
 
-    var cfg Config
-    if err := v.Unmarshal(&cfg); err != nil {
-        return nil, err
-    }
-    return &cfg, nil
+	// DOCKER paths
+	v.AddConfigPath("/app/internal/config")
+
+	// Try read
+	if err := v.ReadInConfig(); err != nil {
+		log.Println("config.yaml NOT found, ENV only:", err)
+	} else {
+		log.Println("config.yaml loaded successfully!")
+	}
+
+	// ENV override
+	v.AutomaticEnv()
+
+	// bind helper
+	bind := func(key, env string) {
+		if err := v.BindEnv(key, env); err != nil {
+			panic(err)
+		}
+	}
+
+	// APP
+	bind("app.environment", "APP_ENV")
+	bind("app.port", "APP_PORT")
+
+	// DATABASE
+	bind("database.host", "POSTGRES_HOST")
+	bind("database.port", "POSTGRES_PORT")
+	bind("database.user", "POSTGRES_USER")
+	bind("database.password", "POSTGRES_PASSWORD")
+	bind("database.name", "POSTGRES_DB")
+	bind("database.sslmode", "POSTGRES_SSLMODE")
+
+	// REDIS
+	bind("redis.host", "REDIS_HOST")
+	bind("redis.port", "REDIS_PORT")
+
+	// JWT
+	bind("jwt.secret", "JWT_SECRET")
+
+	var cfg Config
+	if err := v.Unmarshal(&cfg); err != nil {
+		return nil, fmt.Errorf("config unmarshal error: %w", err)
+	}
+
+	return &cfg, nil
 }

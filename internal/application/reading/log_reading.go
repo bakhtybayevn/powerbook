@@ -1,6 +1,7 @@
 package reading
 
 import (
+	"context"
 	"time"
 
 	"github.com/bakhtybayevn/powerbook/internal/core"
@@ -19,13 +20,20 @@ type LogReadingHandler struct {
 	UserRepo        ports.UserRepository
 	ReadingRepo     ports.ReadingRepository
 	CompetitionRepo ports.CompetitionRepository
+	Leaderboard     ports.LeaderboardPort // NEW
 }
 
-func NewLogReadingHandler(userRepo ports.UserRepository, readingRepo ports.ReadingRepository, competitionRepo ports.CompetitionRepository) *LogReadingHandler {
+func NewLogReadingHandler(
+	userRepo ports.UserRepository,
+	readingRepo ports.ReadingRepository,
+	competitionRepo ports.CompetitionRepository,
+	leaderboard ports.LeaderboardPort,
+) *LogReadingHandler {
 	return &LogReadingHandler{
 		UserRepo:        userRepo,
 		ReadingRepo:     readingRepo,
 		CompetitionRepo: competitionRepo,
+		Leaderboard:     leaderboard,
 	}
 }
 
@@ -41,7 +49,6 @@ func (h *LogReadingHandler) Handle(cmd LogReadingCommand) (newStreak int, totalM
 		return 0, 0, core.New(core.ValidationError, "minutes cannot exceed 1440 (24 hours)")
 	}
 
-	// timestamp cannot be in the future
 	now := time.Now().UTC()
 	if cmd.Timestamp.After(now) {
 		return 0, 0, core.New(core.ValidationError, "timestamp cannot be in the future")
@@ -53,10 +60,10 @@ func (h *LogReadingHandler) Handle(cmd LogReadingCommand) (newStreak int, totalM
 		return 0, 0, core.New(core.NotFoundError, "user not found")
 	}
 
-	// apply domain logic on user
+	// domain logic - update user streak
 	newStreak, totalMinutes = u.LogReading(cmd.Minutes, cmd.Timestamp)
 
-	// persist reading entry
+	// persist reading log
 	rd := &reading.Reading{
 		UserID:    cmd.UserID,
 		Minutes:   cmd.Minutes,
@@ -67,12 +74,12 @@ func (h *LogReadingHandler) Handle(cmd LogReadingCommand) (newStreak int, totalM
 		return 0, 0, core.New(core.ServerError, "failed to save reading")
 	}
 
-	// persist updated user (save streak/total)
+	// save updated user
 	if err := h.UserRepo.Save(u); err != nil {
-		// if we failed to save user, it's a server error
 		return 0, 0, core.New(core.ServerError, "failed to update user")
 	}
 
+	// === AWARD POINTS TO COMPETITIONS ===
 	activeComps, err := h.CompetitionRepo.FindActive(cmd.Timestamp)
 	if err == nil {
 		for _, cmp := range activeComps {
@@ -81,11 +88,17 @@ func (h *LogReadingHandler) Handle(cmd LogReadingCommand) (newStreak int, totalM
 				continue
 			}
 
+			// update in competition object
 			participant.AddReading(cmd.Minutes, cmd.Timestamp, cmp.Rules)
 			_ = h.CompetitionRepo.Save(cmp)
+
+			// compute points
+			points := float64(cmp.Rules.PointsPerMinute * cmd.Minutes)
+
+			// push to Redis leaderboard (best effort)
+			_, _ = h.Leaderboard.AddScore(context.Background(), cmp.ID, cmd.UserID, points)
 		}
 	}
 
-	// optionally: publish domain events (ReadingLogged, StreakUpdated) — omitted for in-memory version
 	return newStreak, totalMinutes, nil
 }

@@ -1,12 +1,18 @@
 package http
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
+
+	_ "github.com/lib/pq"
 
 	"github.com/bakhtybayevn/powerbook/internal/adapters/http/handlers"
 	"github.com/bakhtybayevn/powerbook/internal/adapters/http/middleware"
 	jwtToken "github.com/bakhtybayevn/powerbook/internal/adapters/http/token"
-	memrepo "github.com/bakhtybayevn/powerbook/internal/adapters/postgres"
+	postgres "github.com/bakhtybayevn/powerbook/internal/adapters/postgres"
+	"github.com/bakhtybayevn/powerbook/internal/adapters/redis"
 	appCompetition "github.com/bakhtybayevn/powerbook/internal/application/competition"
 	appReading "github.com/bakhtybayevn/powerbook/internal/application/reading"
 	appUser "github.com/bakhtybayevn/powerbook/internal/application/user"
@@ -42,16 +48,27 @@ func (s *Server) RegisterRoutes() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// === DEPENDENCIES (temporary in-memory) ===
-	userRepo := memrepo.NewInMemoryUserRepo()
-	tokenService := jwtToken.NewJWTService("supersecret")
-	readingRepo := memrepo.NewInMemoryReadingRepo()
-	competitionRepo := memrepo.NewInMemoryCompetitionRepo()
+	db, err := sql.Open("postgres", s.cfg.PostgresDSN())
+	if err != nil {
+		log.Fatalf("failed to connect to DB: %v", err)
+	}
+
+	redisAddr := fmt.Sprintf("%s:%d", s.cfg.Redis.Host, s.cfg.Redis.Port)
+
+	userRepo := postgres.NewPostgresUserRepo(db)
+	tokenService := jwtToken.NewJWTService(s.cfg.JWT.Secret)
+	readingRepo := postgres.NewPostgresReadingRepo(db)
+	competitionRepo := postgres.NewPostgresCompetitionRepo(db)
+	redisLB := redis.NewRedisLeaderboard(redisAddr)
+	lbHealth := middleware.RedisHealth(redisLB)
+
+	// === HANDLERS ===
+	leaderboardHandler := handlers.NewLeaderboardHandler(redisLB)
 
 	// === USE CASES ===
 	registerUserHandler := appUser.NewRegisterUserHandler(userRepo)
 	loginUserHandler := appUser.NewLoginUserHandler(userRepo, tokenService)
-	logReadingHandler := appReading.NewLogReadingHandler(userRepo, readingRepo, competitionRepo)
+	logReadingHandler := appReading.NewLogReadingHandler(userRepo, readingRepo, competitionRepo, redisLB)
 	createCompetitionHandler := appCompetition.NewCreateCompetitionHandler(competitionRepo)
 	joinCompetitionHandler := appCompetition.NewJoinCompetitionHandler(competitionRepo)
 	closeCompetitionHandler := appCompetition.NewCloseCompetitionHandler(competitionRepo)
@@ -71,4 +88,7 @@ func (s *Server) RegisterRoutes() {
 	auth.POST("/competitions/create", handlers.CreateCompetition(createCompetitionHandler))
 	auth.POST("/competitions/:id/join", handlers.JoinCompetition(joinCompetitionHandler))
 	auth.POST("/competitions/:id/close", handlers.CloseCompetition(closeCompetitionHandler))
+	auth.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
+	auth.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
+	auth.GET("/competitions/:id/rank/me", lbHealth, leaderboardHandler.GetRankMe)
 }

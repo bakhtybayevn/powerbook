@@ -1,7 +1,6 @@
 package user
 
 import (
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -78,8 +77,5 @@ func (u *User) LogReading(minutes int, timestamp time.Time) (newStreak int, tota
 }
 
 func (u *User) CheckPassword(password string) bool {
-	log.Println("Checking password for user:", u.Email)
-	log.Println("Stored hash:", u.PasswordHash)
-	log.Println("Provided password:", password)
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
 }

@@ -1,0 +1,65 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-powerbook}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-powerbook}
+      POSTGRES_DB: ${POSTGRES_DB:-powerbook}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-powerbook} -d ${POSTGRES_DB:-powerbook}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    image: golang:1.24-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    working_dir: /migrations
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgres://${POSTGRES_USER:-powerbook}:${POSTGRES_PASSWORD:-powerbook}@postgres:5432/${POSTGRES_DB:-powerbook}?sslmode=disable"
+    command: >
+      sh -c "
+        apk add --no-cache git &&
+        go install github.com/pressly/goose/v3/cmd/goose@latest &&
+        goose up
+      "
+    restart: "no"
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:

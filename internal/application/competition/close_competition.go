@@ -20,7 +20,14 @@ func NewCloseCompetitionHandler(repo ports.CompetitionRepository) *CloseCompetit
 	return &CloseCompetitionHandler{Repo: repo}
 }
 
-func (h *CloseCompetitionHandler) Handle(cmd CloseCompetitionCommand) ([]string, error) {
+type Winner struct {
+	UserID       string `json:"user_id"`
+	Points       int    `json:"points"`
+	DaysRead     int    `json:"days_read"`
+	MinutesTotal int    `json:"minutes_total"`
+}
+
+func (h *CloseCompetitionHandler) Handle(cmd CloseCompetitionCommand) ([]Winner, error) {
 
 	if cmd.CompetitionID == "" {
 		return nil, core.New(core.ValidationError, "competition id is required")
@@ -38,26 +45,20 @@ func (h *CloseCompetitionHandler) Handle(cmd CloseCompetitionCommand) ([]string,
 	// Mark closed
 	cmp.Status = competition.StatusClosed
 
-	// Sort participants by points
-	type scored struct {
-		UserID string
-		Points int
-	}
-
-	list := make([]scored, 0, len(cmp.Participants))
+	// Build winners structure and sort
+	winners := make([]Winner, 0, len(cmp.Participants))
 	for _, p := range cmp.Participants {
-		list = append(list, scored{UserID: p.UserID, Points: p.Points})
+		winners = append(winners, Winner{
+			UserID:       p.UserID,
+			Points:       p.Points,
+			DaysRead:     p.DaysRead,
+			MinutesTotal: p.MinutesTotal,
+		})
 	}
 
-	sort.Slice(list, func(a, b int) bool {
-		return list[a].Points > list[b].Points
+	sort.Slice(winners, func(i, j int) bool {
+		return winners[i].Points > winners[j].Points
 	})
-
-	// Collect winners in sorted order
-	winners := make([]string, len(list))
-	for i, s := range list {
-		winners[i] = s.UserID
-	}
 
 	if err := h.Repo.Save(cmp); err != nil {
 		return nil, core.New(core.ServerError, "failed to save competition")
