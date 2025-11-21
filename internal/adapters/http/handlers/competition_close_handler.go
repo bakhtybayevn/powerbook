@@ -15,7 +15,7 @@ import (
 // @Produce json
 // @Param id path string true "Competition ID"
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/competitions/{id}/close [post]
+// @Router /competitions/{id}/close [post]
 func CloseCompetition(handler *appCompetition.CloseCompetitionHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		competitionID := c.Param("id")

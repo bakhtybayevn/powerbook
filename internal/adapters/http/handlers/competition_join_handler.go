@@ -17,7 +17,7 @@ import (
 // @Produce json
 // @Param id path string true "Competition ID"
 // @Success 200 {object} map[string]string
-// @Router /api/v1/competitions/{id}/join [post]
+// @Router /competitions/{id}/join [post]
 func JoinCompetition(handler *appCompetition.JoinCompetitionHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := middleware.GetUserID(c)

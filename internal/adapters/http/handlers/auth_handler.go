@@ -16,7 +16,7 @@ import (
 // @Produce json
 // @Param request body dto.LoginRequest true "Login data"
 // @Success 200 {object} dto.LoginResponse
-// @Router /api/v1/users/login [post]
+// @Router /users/login [post]
 func LoginUser(handler *appUser.LoginUserHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.LoginRequest

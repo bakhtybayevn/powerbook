@@ -15,7 +15,7 @@ import (
 // @Security BearerAuth
 // @Produce json
 // @Success 200 {object} map[string]string
-// @Router /api/v1/users/me [get]
+// @Router /users/me [get]
 func GetMe(repo ports.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := middleware.GetUserID(c)

@@ -21,7 +21,7 @@ import (
 // @Param request body dto.LogReadingRequest true "Reading data"
 // @Success 200 {object} dto.LogReadingResponse
 // @Failure 400 {object} map[string]string
-// @Router /api/v1/reading/log [post]
+// @Router /reading/log [post]
 func LogReading(handler *appReading.LogReadingHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := middleware.GetUserID(c)

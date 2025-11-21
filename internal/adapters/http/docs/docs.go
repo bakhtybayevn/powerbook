@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/competitions/create": {
+        "/competitions/create": {
             "post": {
                 "security": [
                     {
@@ -53,7 +53,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/competitions/{id}/close": {
+        "/competitions/{id}/close": {
             "post": {
                 "security": [
                     {
@@ -87,7 +87,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/competitions/{id}/join": {
+        "/competitions/{id}/join": {
             "post": {
                 "security": [
                     {
@@ -126,7 +126,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/competitions/{id}/leaderboard": {
+        "/competitions/{id}/leaderboard": {
             "get": {
                 "security": [
                     {
@@ -169,7 +169,41 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/competitions/{id}/rank/{userID}": {
+        "/competitions/{id}/rank/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Get current user's rank in competition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Competition ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/competitions/{id}/rank/{userID}": {
             "get": {
                 "security": [
                     {
@@ -210,7 +244,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/reading/log": {
+        "/reading/log": {
             "post": {
                 "security": [
                     {
@@ -257,7 +291,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/login": {
+        "/users/login": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -290,7 +324,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/me": {
+        "/users/me": {
             "get": {
                 "security": [
                     {
@@ -317,7 +351,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/register": {
+        "/users/register": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -345,40 +379,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.RegisterUserResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/competitions/{id}/rank/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "competition"
-                ],
-                "summary": "Get current user's rank in competition",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Competition ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     }
                 }

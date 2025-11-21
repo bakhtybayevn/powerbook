@@ -26,7 +26,7 @@ func NewLeaderboardHandler(lb ports.LeaderboardPort) *LeaderboardHandler {
 // @Param id path string true "Competition ID"
 // @Param limit query int false "Top N (default 50)"
 // @Success 200 {array} map[string]interface{}
-// @Router /api/v1/competitions/{id}/leaderboard [get]
+// @Router /competitions/{id}/leaderboard [get]
 func (h *LeaderboardHandler) GetLeaderboard(c *gin.Context) {
 	competitionID := c.Param("id")
 	if competitionID == "" {

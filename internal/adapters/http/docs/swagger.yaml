@@ -93,7 +93,7 @@ info:
   title: PowerBook API
   version: "1.0"
 paths:
-  /api/v1/competitions/{id}/close:
+  /competitions/{id}/close:
     post:
       parameters:
       - description: Competition ID
@@ -114,7 +114,7 @@ paths:
       summary: Close competition and compute winners
       tags:
       - competition
-  /api/v1/competitions/{id}/join:
+  /competitions/{id}/join:
     post:
       consumes:
       - application/json
@@ -138,7 +138,7 @@ paths:
       summary: Join a competition
       tags:
       - competition
-  /api/v1/competitions/{id}/leaderboard:
+  /competitions/{id}/leaderboard:
     get:
       parameters:
       - description: Competition ID
@@ -165,7 +165,7 @@ paths:
       summary: Get competition leaderboard
       tags:
       - competition
-  /api/v1/competitions/{id}/rank/{userID}:
+  /competitions/{id}/rank/{userID}:
     get:
       parameters:
       - description: Competition ID
@@ -191,7 +191,28 @@ paths:
       summary: Get user rank in competition leaderboard
       tags:
       - competition
-  /api/v1/competitions/create:
+  /competitions/{id}/rank/me:
+    get:
+      parameters:
+      - description: Competition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user's rank in competition
+      tags:
+      - competition
+  /competitions/create:
     post:
       consumes:
       - application/json
@@ -214,7 +235,7 @@ paths:
       summary: Create a new competition
       tags:
       - competition
-  /api/v1/reading/log:
+  /reading/log:
     post:
       consumes:
       - application/json
@@ -243,7 +264,7 @@ paths:
       summary: Log reading minutes for authenticated user
       tags:
       - reading
-  /api/v1/users/login:
+  /users/login:
     post:
       consumes:
       - application/json
@@ -264,7 +285,7 @@ paths:
       summary: Login user
       tags:
       - auth
-  /api/v1/users/me:
+  /users/me:
     get:
       produces:
       - application/json
@@ -280,7 +301,7 @@ paths:
       summary: Get authenticated user info
       tags:
       - users
-  /api/v1/users/register:
+  /users/register:
     post:
       consumes:
       - application/json
@@ -301,27 +322,6 @@ paths:
       summary: Register a new user
       tags:
       - users
-  /competitions/{id}/rank/me:
-    get:
-      parameters:
-      - description: Competition ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get current user's rank in competition
-      tags:
-      - competition
 schemes:
 - https
 - http

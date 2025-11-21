@@ -16,7 +16,7 @@ import (
 // @Param id path string true "Competition ID"
 // @Param userID path string true "User ID"
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/competitions/{id}/rank/{userID} [get]
+// @Router /competitions/{id}/rank/{userID} [get]
 func (h *LeaderboardHandler) GetRank(c *gin.Context) {
 	cmpID := c.Param("id")
 	userID := c.Param("userID")

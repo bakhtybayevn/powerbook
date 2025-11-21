@@ -17,34 +17,34 @@ import (
 // @Produce json
 // @Param request body dto.CreateCompetitionRequest true "Competition info"
 // @Success 200 {object} dto.CompetitionResponse
-// @Router /api/v1/competitions/create [post]
+// @Router /competitions/create [post]
 func CreateCompetition(handler *appCompetition.CreateCompetitionHandler) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        var req dto.CreateCompetitionRequest
+	return func(c *gin.Context) {
+		var req dto.CreateCompetitionRequest
 
-        if err := c.ShouldBindJSON(&req); err != nil {
-            c.Error(core.New(core.ValidationError, "invalid competition request"))
-            return
-        }
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.Error(core.New(core.ValidationError, "invalid competition request"))
+			return
+		}
 
-        cmp, err := handler.Handle(appCompetition.CreateCompetitionCommand{
-            Name:            req.Name,
-            StartDate:       req.StartDate,
-            EndDate:         req.EndDate,
-            PointsPerMinute: req.PointsPerMinute,
-        })
-        if err != nil {
-            c.Error(err)
-            return
-        }
+		cmp, err := handler.Handle(appCompetition.CreateCompetitionCommand{
+			Name:            req.Name,
+			StartDate:       req.StartDate,
+			EndDate:         req.EndDate,
+			PointsPerMinute: req.PointsPerMinute,
+		})
+		if err != nil {
+			c.Error(err)
+			return
+		}
 
-        response.JSON(c, dto.CompetitionResponse{
-            ID:              cmp.ID,
-            Name:            cmp.Name,
-            StartDate:       cmp.StartDate,
-            EndDate:         cmp.EndDate,
-            Status:          string(cmp.Status),
-            PointsPerMinute: cmp.Rules.PointsPerMinute,
-        })
-    }
+		response.JSON(c, dto.CompetitionResponse{
+			ID:              cmp.ID,
+			Name:            cmp.Name,
+			StartDate:       cmp.StartDate,
+			EndDate:         cmp.EndDate,
+			Status:          string(cmp.Status),
+			PointsPerMinute: cmp.Rules.PointsPerMinute,
+		})
+	}
 }
