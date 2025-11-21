@@ -34,6 +34,13 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	fmt.Println("DB CONFIG:")
+	fmt.Println("HOST:", cfg.Database.Host)
+	fmt.Println("PORT:", cfg.Database.Port)
+	fmt.Println("USER:", cfg.Database.User)
+	fmt.Println("NAME:", cfg.Database.Name)
+	fmt.Println("SSLMODE:", cfg.Database.SSLMode)
+
 	router := gin.Default()
 
 	server := httpAdapter.NewServer(router, cfg)
