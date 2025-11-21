@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api/v1
 definitions:
   dto.CompetitionResponse:
     properties:
@@ -87,7 +87,6 @@ definitions:
       id:
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: API for PowerBook reading competition platform
@@ -323,6 +322,9 @@ paths:
       summary: Get current user's rank in competition
       tags:
       - competition
+schemes:
+- https
+- http
 securityDefinitions:
   BearerAuth:
     description: 'Enter: Bearer <token>'

@@ -26,8 +26,8 @@ import (
 // @version 1.0
 // @description API for PowerBook reading competition platform
 
-// @host localhost:8080
-// @BasePath /
+// @BasePath /api/v1
+// @schemes https http
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

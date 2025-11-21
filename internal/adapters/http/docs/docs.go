@@ -527,9 +527,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/",
-	Schemes:          []string{},
+	Host:             "",
+	BasePath:         "/api/v1",
+	Schemes:          []string{"https", "http"},
 	Title:            "PowerBook API",
 	Description:      "API for PowerBook reading competition platform",
 	InfoInstanceName: "swagger",
