@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/bakhtybayevn/powerbook/internal/core"
@@ -45,6 +46,11 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 	)
 
 	if err != nil {
+		log.Printf("[PostgresUserRepo.Save] SQL ERROR: %v", err)
+		log.Printf("[PostgresUserRepo.Save] QUERY: %s", q)
+		log.Printf("[PostgresUserRepo.Save] PARAMS: id=%s email=%s displayName=%s",
+			u.ID, u.Email, u.DisplayName)
+
 		return core.New(core.ServerError, "failed to save user")
 	}
 	return nil
