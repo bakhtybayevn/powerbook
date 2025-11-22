@@ -20,7 +20,6 @@ func NewJoinCompetitionHandler(repo ports.CompetitionRepository) *JoinCompetitio
 }
 
 func (h *JoinCompetitionHandler) Handle(cmd JoinCompetitionCommand) error {
-
 	if cmd.CompetitionID == "" {
 		return core.New(core.ValidationError, "competition id is required")
 	}
@@ -43,11 +42,12 @@ func (h *JoinCompetitionHandler) Handle(cmd JoinCompetitionCommand) error {
 	}
 
 	// Add participant
-	cmp.Participants[cmd.UserID] = competition.NewParticipant(cmd.UserID)
+	p := competition.NewParticipant(cmd.UserID)
+    cmp.Participants[cmd.UserID] = p
 
-	if err := h.Repo.Save(cmp); err != nil {
-		return core.New(core.ServerError, "failed to update competition")
-	}
+	if err := h.Repo.SaveParticipant(cmd.CompetitionID, p); err != nil {
+        return core.New(core.ServerError, "failed to add participant")
+    }
 
 	return nil
 }
