@@ -47,7 +47,7 @@ func (h *CreateCompetitionHandler) Handle(cmd CreateCompetitionCommand) (*compet
 		return nil, core.New(core.ValidationError, err.Error())
 	}
 
-	if err := h.Repo.Save(cmp); err != nil {
+	if err := h.Repo.Create(cmp); err != nil {
 		return nil, core.New(core.ServerError, "failed to save competition")
 	}
 

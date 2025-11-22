@@ -7,6 +7,7 @@ import (
 )
 
 type CompetitionRepository interface {
+	Create(c *competition.Competition) error
 	Save(c *competition.Competition) error
 	Get(id string) (*competition.Competition, error)
 	FindActive(at time.Time) ([]*competition.Competition, error)
