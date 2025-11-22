@@ -64,12 +64,7 @@ func (h *LogReadingHandler) Handle(cmd LogReadingCommand) (newStreak int, totalM
 	newStreak, totalMinutes = u.LogReading(cmd.Minutes, cmd.Timestamp)
 
 	// persist reading log
-	rd := &reading.Reading{
-		UserID:    cmd.UserID,
-		Minutes:   cmd.Minutes,
-		Source:    cmd.Source,
-		Timestamp: cmd.Timestamp.UTC(),
-	}
+	rd := reading.NewReading(cmd.UserID, cmd.Minutes, cmd.Source, cmd.Timestamp.UTC())
 	if err := h.ReadingRepo.Save(rd); err != nil {
 		return 0, 0, core.New(core.ServerError, "failed to save reading")
 	}
