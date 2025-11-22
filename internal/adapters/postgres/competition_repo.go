@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/bakhtybayevn/powerbook/internal/core"
@@ -127,6 +128,11 @@ func (r *PostgresCompetitionRepo) Save(c *competition.Competition) error {
 	)
 
 	if err != nil {
+		log.Printf("[PostgresCompetitionRepo.Save] SQL ERROR: %v", err)
+		log.Printf("[PostgresCompetitionRepo.Save] QUERY: %s", q)
+		log.Printf("[PostgresCompetitionRepo.Save] PARAMS: id=%s name=%s startDate=%v endDate=%v status=%s pointsPerMinute=%d",
+			c.ID, c.Name, c.StartDate, c.EndDate, c.Status, c.Rules.PointsPerMinute)
+
 		return core.New(core.ServerError, "failed to save competition")
 	}
 	return nil

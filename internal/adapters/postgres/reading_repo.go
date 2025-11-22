@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/bakhtybayevn/powerbook/internal/core"
@@ -31,6 +32,10 @@ func (r *PostgresReadingRepo) Save(rd *reading.Reading) error {
 	)
 
 	if err != nil {
+		log.Printf("[PostgresReadingRepo.Save] SQL ERROR: %v", err)
+		log.Printf("[PostgresReadingRepo.Save] QUERY: %s", q)
+		log.Printf("[PostgresReadingRepo.Save] PARAMS: id=%s userID=%s minutes=%d source=%s timestamp=%v",
+			rd.ID, rd.UserID, rd.Minutes, rd.Source, rd.Timestamp)
 		return core.New(core.ServerError, "failed to save reading log")
 	}
 	return nil

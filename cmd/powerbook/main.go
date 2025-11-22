@@ -39,8 +39,13 @@ func main() {
 	fmt.Println("PORT:", cfg.Database.Port)
 	fmt.Println("USER:", cfg.Database.User)
 	fmt.Println("NAME:", cfg.Database.Name)
-	fmt.Println("PASSWORD:", cfg.Database.Password)
 	fmt.Println("SSLMODE:", cfg.Database.SSLMode)
+
+	fmt.Println("Redis Config")
+	fmt.Println("HOST:", cfg.Redis.Host)
+	fmt.Println("PORT:", cfg.Redis.Port)
+	fmt.Println("PASSWORD:", cfg.Redis.Password)
+	fmt.Println("USE TLS:", cfg.Redis.UseTLS)
 
 	router := gin.Default()
 
