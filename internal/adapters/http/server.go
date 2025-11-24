@@ -72,6 +72,8 @@ func (s *Server) RegisterRoutes() {
 	createCompetitionHandler := appCompetition.NewCreateCompetitionHandler(competitionRepo)
 	joinCompetitionHandler := appCompetition.NewJoinCompetitionHandler(competitionRepo)
 	closeCompetitionHandler := appCompetition.NewCloseCompetitionHandler(competitionRepo)
+	listAllCompetitionsHandler := appCompetition.NewListAllCompetitionsHandler(competitionRepo, userRepo)
+	listMyCompetitionsHandler := appCompetition.NewListMyCompetitionsHandler(competitionRepo, userRepo)
 
 	// === API VERSIONING (/api/v1) ===
 	v1 := s.router.Group("/api/v1")
@@ -91,4 +93,6 @@ func (s *Server) RegisterRoutes() {
 	auth.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
 	auth.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
 	auth.GET("/competitions/:id/rank/me", lbHealth, leaderboardHandler.GetRankMe)
+	auth.GET("/competitions", handlers.ListAllCompetitions(listAllCompetitionsHandler))
+	auth.GET("/competitions/my", handlers.ListMyCompetitions(listMyCompetitionsHandler))
 }

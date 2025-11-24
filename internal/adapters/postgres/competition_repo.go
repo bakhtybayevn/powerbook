@@ -193,3 +193,67 @@ func (r *PostgresCompetitionRepo) FindActive(ts time.Time) ([]*competition.Compe
 
 	return list, nil
 }
+
+// --------------------------------------------------
+// GET ALL COMPETITIONS
+// --------------------------------------------------
+func (r *PostgresCompetitionRepo) GetAll() ([]*competition.Competition, error) {
+	const q = `
+        SELECT id
+        FROM competitions
+        ORDER BY start_date DESC;
+    `
+
+	rows, err := r.db.Query(q)
+	if err != nil {
+		return nil, core.New(core.ServerError, "failed to load competitions")
+	}
+	defer rows.Close()
+
+	var list []*competition.Competition
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			continue
+		}
+
+		c, err := r.Get(id)
+		if err == nil {
+			list = append(list, c)
+		}
+	}
+
+	return list, nil
+}
+
+// --------------------------------------------------
+// GET COMPETITIONS WHERE USER PARTICIPATES
+// --------------------------------------------------
+func (r *PostgresCompetitionRepo) FindByUser(userID string) ([]*competition.Competition, error) {
+	const q = `
+        SELECT competition_id
+        FROM participants
+        WHERE user_id = $1;
+    `
+
+	rows, err := r.db.Query(q, userID)
+	if err != nil {
+		return nil, core.New(core.ServerError, "failed to load user's competitions")
+	}
+	defer rows.Close()
+
+	var list []*competition.Competition
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			continue
+		}
+
+		c, err := r.Get(id)
+		if err == nil {
+			list = append(list, c)
+		}
+	}
+
+	return list, nil
+}

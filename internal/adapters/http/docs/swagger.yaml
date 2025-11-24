@@ -93,6 +93,21 @@ info:
   title: PowerBook API
   version: "1.0"
 paths:
+  /competitions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all competitions
+      tags:
+      - competition
   /competitions/{id}/close:
     post:
       parameters:
@@ -233,6 +248,21 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new competition
+      tags:
+      - competition
+  /competitions/my:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List competitions where current user participates
       tags:
       - competition
   /reading/log:

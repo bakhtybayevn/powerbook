@@ -12,4 +12,6 @@ type CompetitionRepository interface {
 	SaveParticipant(competitionID string, p *competition.Participant) error
 	Get(id string) (*competition.Competition, error)
 	FindActive(at time.Time) ([]*competition.Competition, error)
+	GetAll() ([]*competition.Competition, error)
+	FindByUser(userID string) ([]*competition.Competition, error)
 }
