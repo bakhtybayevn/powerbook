@@ -91,8 +91,8 @@ func (s *Server) RegisterRoutes() {
 	auth.POST("/competitions/:id/join", handlers.JoinCompetition(joinCompetitionHandler))
 	auth.POST("/competitions/:id/close", handlers.CloseCompetition(closeCompetitionHandler))
 	auth.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
-	auth.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
 	auth.GET("/competitions/:id/rank/me", lbHealth, leaderboardHandler.GetRankMe)
+	auth.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
 	auth.GET("/competitions", handlers.ListAllCompetitions(listAllCompetitionsHandler))
 	auth.GET("/competitions/my", handlers.ListMyCompetitions(listMyCompetitionsHandler))
 }
