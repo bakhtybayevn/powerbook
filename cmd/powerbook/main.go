@@ -1,3 +1,4 @@
+// PowerBook API - reading competition platform
 package main
 
 import (
