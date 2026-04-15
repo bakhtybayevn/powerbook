@@ -87,6 +87,7 @@ func (s *Server) RegisterRoutes() {
 	auth.Use(middleware.AuthMiddleware(tokenService))
 	auth.GET("/users/me", handlers.GetMe(userRepo))
 	auth.POST("/reading/log", handlers.LogReading(logReadingHandler))
+	auth.GET("/reading/history", handlers.ReadingHistory(readingRepo))
 	auth.POST("/competitions/create", handlers.CreateCompetition(createCompetitionHandler))
 	auth.POST("/competitions/:id/join", handlers.JoinCompetition(joinCompetitionHandler))
 	auth.POST("/competitions/:id/close", handlers.CloseCompetition(closeCompetitionHandler))
