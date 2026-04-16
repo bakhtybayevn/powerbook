@@ -22,9 +22,9 @@ func NewPostgresUserRepo(db *sql.DB) *PostgresUserRepo {
 // ========================================
 func (r *PostgresUserRepo) Save(u *user.User) error {
 	const q = `
-	INSERT INTO users (id, email, display_name, password_hash, 
-	    streak_current_days, streak_last_date, total_minutes, created_at, updated_at)
-	VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+	INSERT INTO users (id, email, display_name, password_hash,
+	    streak_current_days, streak_last_date, total_minutes, xp, telegram_handle, created_at, updated_at)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW())
 	ON CONFLICT (id) DO UPDATE SET
 	    email = EXCLUDED.email,
 	    display_name = EXCLUDED.display_name,
@@ -32,6 +32,8 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 	    streak_current_days = EXCLUDED.streak_current_days,
 	    streak_last_date = EXCLUDED.streak_last_date,
 	    total_minutes = EXCLUDED.total_minutes,
+	    xp = EXCLUDED.xp,
+	    telegram_handle = EXCLUDED.telegram_handle,
 	    updated_at = NOW();
 	`
 
@@ -43,6 +45,8 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 		u.StreakCurrentDays,
 		u.StreakLastDate,
 		u.TotalMinutes,
+		u.XP,
+		u.TelegramHandle,
 	)
 
 	if err != nil {
@@ -62,7 +66,7 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 func (r *PostgresUserRepo) Get(id string) (*user.User, error) {
 	const q = `
 	SELECT id, email, display_name, password_hash,
-	       streak_current_days, streak_last_date, total_minutes
+	       streak_current_days, streak_last_date, total_minutes, xp, telegram_handle
 	FROM users
 	WHERE id = $1;
 	`
@@ -82,6 +86,8 @@ func (r *PostgresUserRepo) Get(id string) (*user.User, error) {
 		&u.StreakCurrentDays,
 		&streakLastDate,
 		&u.TotalMinutes,
+		&u.XP,
+		&u.TelegramHandle,
 	)
 
 	// null → zero
@@ -106,7 +112,7 @@ func (r *PostgresUserRepo) Get(id string) (*user.User, error) {
 func (r *PostgresUserRepo) FindByEmail(email string) (*user.User, error) {
 	const q = `
 	SELECT id, email, display_name, password_hash,
-	       streak_current_days, streak_last_date, total_minutes
+	       streak_current_days, streak_last_date, total_minutes, xp, telegram_handle
 	FROM users
 	WHERE email = $1;
 	`
@@ -126,6 +132,8 @@ func (r *PostgresUserRepo) FindByEmail(email string) (*user.User, error) {
 		&u.StreakCurrentDays,
 		&streakLastDate,
 		&u.TotalMinutes,
+		&u.XP,
+		&u.TelegramHandle,
 	)
 
 	if streakLastDate != nil {

@@ -27,11 +27,15 @@ func GetMe(repo ports.UserRepository) gin.HandlerFunc {
 		}
 
 		response.JSON(c, gin.H{
-			"id":             u.ID,
-			"email":          u.Email,
-			"display_name":   u.DisplayName,
-			"streak_current": u.StreakCurrentDays,
-			"total_minutes":  u.TotalMinutes,
+			"id":              u.ID,
+			"email":           u.Email,
+			"display_name":    u.DisplayName,
+			"streak_current":  u.StreakCurrentDays,
+			"total_minutes":   u.TotalMinutes,
+			"xp":              u.XP,
+			"level":           u.Level(),
+			"level_name":      u.LevelName(),
+			"telegram_handle": u.TelegramHandle,
 		})
 	}
 }

@@ -90,6 +90,7 @@ func (s *Server) RegisterRoutes() {
 	auth := v1.Group("/")
 	auth.Use(middleware.AuthMiddleware(tokenService))
 	auth.GET("/users/me", handlers.GetMe(userRepo))
+	auth.PUT("/users/me/profile", handlers.UpdateProfile(userRepo))
 	auth.POST("/reading/log", handlers.LogReading(logReadingHandler))
 	auth.GET("/reading/history", handlers.ReadingHistory(readingRepo))
 	auth.POST("/competitions/create", handlers.CreateCompetition(createCompetitionHandler))

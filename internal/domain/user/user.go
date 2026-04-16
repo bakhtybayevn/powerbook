@@ -7,6 +7,23 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Level thresholds for the 10-level system
+var Levels = []struct {
+	Name string
+	XP   int
+}{
+	{"Newbie", 0},
+	{"Reader", 100},
+	{"Bookworm", 300},
+	{"Scholar", 600},
+	{"Sage", 1000},
+	{"Expert", 1500},
+	{"Master", 2200},
+	{"Grandmaster", 3000},
+	{"Legend", 4000},
+	{"Book King", 5500},
+}
+
 // User aggregate
 type User struct {
 	ID           string
@@ -20,6 +37,12 @@ type User struct {
 
 	// analytics
 	TotalMinutes int
+
+	// XP & leveling
+	XP int
+
+	// social
+	TelegramHandle string
 }
 
 func NewUser(email, displayName, password string) *User {
@@ -32,7 +55,30 @@ func NewUser(email, displayName, password string) *User {
 		StreakCurrentDays: 0,
 		StreakLastDate:    nil,
 		TotalMinutes:      0,
+		XP:               0,
+		TelegramHandle:   "",
 	}
+}
+
+// AddXP grants experience points to the user.
+func (u *User) AddXP(amount int) {
+	u.XP += amount
+}
+
+// Level returns the user's current level (1-10) based on XP.
+func (u *User) Level() int {
+	lvl := 1
+	for i, l := range Levels {
+		if u.XP >= l.XP {
+			lvl = i + 1
+		}
+	}
+	return lvl
+}
+
+// LevelName returns the display name for the user's current level.
+func (u *User) LevelName() string {
+	return Levels[u.Level()-1].Name
 }
 
 // LogReading performs domain logic for a user's reading entry.

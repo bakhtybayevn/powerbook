@@ -1,0 +1,7 @@
+-- +goose Up
+ALTER TABLE users ADD COLUMN xp INT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN telegram_handle TEXT NOT NULL DEFAULT '';
+
+-- +goose Down
+ALTER TABLE users DROP COLUMN IF EXISTS xp;
+ALTER TABLE users DROP COLUMN IF EXISTS telegram_handle;
