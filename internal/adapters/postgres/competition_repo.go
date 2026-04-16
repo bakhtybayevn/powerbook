@@ -257,3 +257,98 @@ func (r *PostgresCompetitionRepo) FindByUser(userID string) ([]*competition.Comp
 
 	return list, nil
 }
+
+// --------------------------------------------------
+// GIFT EXCHANGE METHODS
+// --------------------------------------------------
+
+func (r *PostgresCompetitionRepo) SaveGiftExchange(g *competition.GiftExchange) error {
+	const q = `
+	INSERT INTO gift_exchanges (id, competition_id, giver_id, receiver_id, gift_description, giver_confirmed, receiver_confirmed, created_at, updated_at)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+	ON CONFLICT (competition_id, giver_id) DO NOTHING;
+	`
+	_, err := r.db.Exec(q, g.ID, g.CompetitionID, g.GiverID, g.ReceiverID, g.GiftDescription, g.GiverConfirmed, g.ReceiverConfirmed)
+	if err != nil {
+		return core.New(core.ServerError, "failed to save gift exchange")
+	}
+	return nil
+}
+
+func (r *PostgresCompetitionRepo) GetGiftExchanges(competitionID string) ([]*competition.GiftExchange, error) {
+	const q = `
+	SELECT id, competition_id, giver_id, receiver_id, gift_description, giver_confirmed, receiver_confirmed, created_at, updated_at
+	FROM gift_exchanges
+	WHERE competition_id = $1
+	ORDER BY created_at;
+	`
+	rows, err := r.db.Query(q, competitionID)
+	if err != nil {
+		return nil, core.New(core.ServerError, "failed to load gift exchanges")
+	}
+	defer rows.Close()
+
+	var list []*competition.GiftExchange
+	for rows.Next() {
+		var g competition.GiftExchange
+		if err := rows.Scan(&g.ID, &g.CompetitionID, &g.GiverID, &g.ReceiverID, &g.GiftDescription, &g.GiverConfirmed, &g.ReceiverConfirmed, &g.CreatedAt, &g.UpdatedAt); err != nil {
+			continue
+		}
+		list = append(list, &g)
+	}
+	return list, nil
+}
+
+func (r *PostgresCompetitionRepo) GetGiftExchange(id string) (*competition.GiftExchange, error) {
+	const q = `
+	SELECT id, competition_id, giver_id, receiver_id, gift_description, giver_confirmed, receiver_confirmed, created_at, updated_at
+	FROM gift_exchanges
+	WHERE id = $1;
+	`
+	var g competition.GiftExchange
+	err := r.db.QueryRow(q, id).Scan(&g.ID, &g.CompetitionID, &g.GiverID, &g.ReceiverID, &g.GiftDescription, &g.GiverConfirmed, &g.ReceiverConfirmed, &g.CreatedAt, &g.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, core.New(core.NotFoundError, "gift exchange not found")
+	}
+	if err != nil {
+		return nil, core.New(core.ServerError, "failed to load gift exchange")
+	}
+	return &g, nil
+}
+
+func (r *PostgresCompetitionRepo) UpdateGiftExchange(g *competition.GiftExchange) error {
+	const q = `
+	UPDATE gift_exchanges
+	SET gift_description = $2, giver_confirmed = $3, receiver_confirmed = $4, updated_at = NOW()
+	WHERE id = $1;
+	`
+	_, err := r.db.Exec(q, g.ID, g.GiftDescription, g.GiverConfirmed, g.ReceiverConfirmed)
+	if err != nil {
+		return core.New(core.ServerError, "failed to update gift exchange")
+	}
+	return nil
+}
+
+func (r *PostgresCompetitionRepo) GetUserGiftHistory(userID string) ([]*competition.GiftExchange, error) {
+	const q = `
+	SELECT id, competition_id, giver_id, receiver_id, gift_description, giver_confirmed, receiver_confirmed, created_at, updated_at
+	FROM gift_exchanges
+	WHERE giver_id = $1 OR receiver_id = $1
+	ORDER BY created_at DESC;
+	`
+	rows, err := r.db.Query(q, userID)
+	if err != nil {
+		return nil, core.New(core.ServerError, "failed to load gift history")
+	}
+	defer rows.Close()
+
+	var list []*competition.GiftExchange
+	for rows.Next() {
+		var g competition.GiftExchange
+		if err := rows.Scan(&g.ID, &g.CompetitionID, &g.GiverID, &g.ReceiverID, &g.GiftDescription, &g.GiverConfirmed, &g.ReceiverConfirmed, &g.CreatedAt, &g.UpdatedAt); err != nil {
+			continue
+		}
+		list = append(list, &g)
+	}
+	return list, nil
+}

@@ -14,4 +14,11 @@ type CompetitionRepository interface {
 	FindActive(at time.Time) ([]*competition.Competition, error)
 	GetAll() ([]*competition.Competition, error)
 	FindByUser(userID string) ([]*competition.Competition, error)
+
+	// Gift exchanges
+	SaveGiftExchange(g *competition.GiftExchange) error
+	GetGiftExchanges(competitionID string) ([]*competition.GiftExchange, error)
+	GetGiftExchange(id string) (*competition.GiftExchange, error)
+	UpdateGiftExchange(g *competition.GiftExchange) error
+	GetUserGiftHistory(userID string) ([]*competition.GiftExchange, error)
 }

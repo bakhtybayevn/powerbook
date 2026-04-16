@@ -24,7 +24,7 @@ func CloseCompetition(handler *appCompetition.CloseCompetitionHandler) gin.Handl
 			return
 		}
 
-		winners, err := handler.Handle(appCompetition.CloseCompetitionCommand{
+		winners, gifts, err := handler.Handle(appCompetition.CloseCompetitionCommand{
 			CompetitionID: competitionID,
 		})
 		if err != nil {
@@ -35,6 +35,7 @@ func CloseCompetition(handler *appCompetition.CloseCompetitionHandler) gin.Handl
 		response.JSON(c, gin.H{
 			"closed":  "ok",
 			"winners": winners,
+			"gifts":   gifts,
 		})
 	}
 }

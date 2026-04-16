@@ -71,7 +71,7 @@ func (s *Server) RegisterRoutes() {
 	logReadingHandler := appReading.NewLogReadingHandler(userRepo, readingRepo, competitionRepo, redisLB)
 	createCompetitionHandler := appCompetition.NewCreateCompetitionHandler(competitionRepo)
 	joinCompetitionHandler := appCompetition.NewJoinCompetitionHandler(competitionRepo)
-	closeCompetitionHandler := appCompetition.NewCloseCompetitionHandler(competitionRepo)
+	closeCompetitionHandler := appCompetition.NewCloseCompetitionHandler(competitionRepo, userRepo)
 	listAllCompetitionsHandler := appCompetition.NewListAllCompetitionsHandler(competitionRepo, userRepo)
 	listMyCompetitionsHandler := appCompetition.NewListMyCompetitionsHandler(competitionRepo, userRepo)
 
@@ -85,6 +85,7 @@ func (s *Server) RegisterRoutes() {
 	v1.GET("/competitions", handlers.ListAllCompetitions(listAllCompetitionsHandler))
 	v1.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
 	v1.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
+	v1.GET("/competitions/:id/gifts", handlers.GetGiftExchanges(competitionRepo, userRepo))
 
 	// ---- Protected endpoints ----
 	auth := v1.Group("/")
@@ -98,4 +99,5 @@ func (s *Server) RegisterRoutes() {
 	auth.POST("/competitions/:id/close", handlers.CloseCompetition(closeCompetitionHandler))
 	auth.GET("/competitions/:id/rank/me", lbHealth, leaderboardHandler.GetRankMe)
 	auth.GET("/competitions/my", handlers.ListMyCompetitions(listMyCompetitionsHandler))
+	auth.POST("/gifts/:giftId/confirm", handlers.ConfirmGift(competitionRepo))
 }
