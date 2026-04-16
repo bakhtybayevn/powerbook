@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -83,6 +84,7 @@ func (s *Server) RegisterRoutes() {
 	v1.POST("/users/login", handlers.LoginUser(loginUserHandler))
 	v1.GET("/users/:id", handlers.GetUserProfile(userRepo))
 	v1.GET("/competitions", handlers.ListAllCompetitions(listAllCompetitionsHandler))
+	v1.GET("/competitions/:id", handlers.GetCompetition(competitionRepo, userRepo))
 	v1.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
 	v1.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
 	v1.GET("/competitions/:id/gifts", handlers.GetGiftExchanges(competitionRepo, userRepo))
@@ -100,4 +102,26 @@ func (s *Server) RegisterRoutes() {
 	auth.GET("/competitions/:id/rank/me", lbHealth, leaderboardHandler.GetRankMe)
 	auth.GET("/competitions/my", handlers.ListMyCompetitions(listMyCompetitionsHandler))
 	auth.POST("/gifts/:giftId/confirm", handlers.ConfirmGift(competitionRepo))
+
+	// === AUTO-CLOSE SCHEDULER ===
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			comps, err := competitionRepo.GetAll()
+			if err != nil {
+				log.Printf("[AutoClose] failed to get competitions: %v", err)
+				continue
+			}
+			now := time.Now().UTC()
+			for _, c := range comps {
+				if c.Status == "open" && now.After(c.EndDate) {
+					log.Printf("[AutoClose] closing competition %s (%s)", c.ID, c.Name)
+					closeCompetitionHandler.Handle(appCompetition.CloseCompetitionCommand{
+						CompetitionID: c.ID,
+					})
+				}
+			}
+		}
+	}()
 }

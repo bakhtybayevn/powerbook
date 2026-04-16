@@ -29,6 +29,7 @@ type Winner struct {
 	MinutesTotal int    `json:"minutes_total"`
 	Rank         int    `json:"rank"`
 	XPEarned     int    `json:"xp_earned"`
+	Group        string `json:"group"` // "top", "bottom", or "neutral"
 }
 
 // XP award logic:
@@ -122,20 +123,33 @@ func (h *CloseCompetitionHandler) Handle(cmd CloseCompetitionCommand) ([]Winner,
 		}
 	}
 
-	// Generate gift pairings: top 50% gives to bottom 50%
+	// Assign groups: top 50%, bottom 50%, neutral (middle person if odd)
+	// For odd total: exactly half rounded down on each side, middle person is neutral
+	halfSize := total / 2
+	for i := range winners {
+		if total%2 != 0 && i == halfSize {
+			winners[i].Group = "neutral"
+		} else if i < halfSize {
+			winners[i].Group = "top"
+		} else if total%2 != 0 && i > halfSize {
+			winners[i].Group = "bottom"
+		} else if total%2 == 0 && i >= halfSize {
+			winners[i].Group = "bottom"
+		} else {
+			winners[i].Group = "top"
+		}
+	}
+
+	// Generate gift pairings: top gives to bottom (1:1 random)
 	var gifts []*competition.GiftExchange
 	if total >= 2 {
-		mid := total / 2
-		if total%2 != 0 {
-			mid = total/2 + 1
-		}
-		topHalf := make([]string, 0, mid)
-		bottomHalf := make([]string, 0, total-mid)
+		topHalf := make([]string, 0)
+		bottomHalf := make([]string, 0)
 
-		for i, w := range winners {
-			if i < mid {
+		for _, w := range winners {
+			if w.Group == "top" {
 				topHalf = append(topHalf, w.UserID)
-			} else {
+			} else if w.Group == "bottom" {
 				bottomHalf = append(bottomHalf, w.UserID)
 			}
 		}
@@ -145,7 +159,6 @@ func (h *CloseCompetitionHandler) Handle(cmd CloseCompetitionCommand) ([]Winner,
 			bottomHalf[i], bottomHalf[j] = bottomHalf[j], bottomHalf[i]
 		})
 
-		// Pair: each top gives to one bottom (limited by smaller group)
 		pairCount := len(bottomHalf)
 		if len(topHalf) < pairCount {
 			pairCount = len(topHalf)

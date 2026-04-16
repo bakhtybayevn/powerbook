@@ -2,6 +2,7 @@ package reading
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/bakhtybayevn/powerbook/internal/core"
@@ -52,6 +53,22 @@ func (h *LogReadingHandler) Handle(cmd LogReadingCommand) (newStreak int, totalM
 	now := time.Now().UTC()
 	if cmd.Timestamp.After(now) {
 		return 0, 0, core.New(core.ValidationError, "timestamp cannot be in the future")
+	}
+
+	// Check daily cap: max 1440 minutes per day
+	dayStart := time.Date(cmd.Timestamp.Year(), cmd.Timestamp.Month(), cmd.Timestamp.Day(), 0, 0, 0, 0, time.UTC)
+	dayEnd := dayStart.Add(24 * time.Hour)
+	dayLogs, _ := h.ReadingRepo.ListByDateRange(cmd.UserID, dayStart, dayEnd)
+	dayTotal := 0
+	for _, dl := range dayLogs {
+		dayTotal += dl.Minutes
+	}
+	if dayTotal+cmd.Minutes > 1440 {
+		remaining := 1440 - dayTotal
+		if remaining <= 0 {
+			return 0, 0, core.New(core.ValidationError, "daily reading limit reached (1440 min/day)")
+		}
+		return 0, 0, core.New(core.ValidationError, fmt.Sprintf("would exceed daily limit; you can log %d more minutes today", remaining))
 	}
 
 	// load user
