@@ -43,6 +43,9 @@ type User struct {
 
 	// social
 	TelegramHandle string
+
+	// admin
+	IsAdmin bool
 }
 
 func NewUser(email, displayName, password string) *User {

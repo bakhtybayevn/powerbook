@@ -23,8 +23,8 @@ func NewPostgresUserRepo(db *sql.DB) *PostgresUserRepo {
 func (r *PostgresUserRepo) Save(u *user.User) error {
 	const q = `
 	INSERT INTO users (id, email, display_name, password_hash,
-	    streak_current_days, streak_last_date, total_minutes, xp, telegram_handle, created_at, updated_at)
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW())
+	    streak_current_days, streak_last_date, total_minutes, xp, telegram_handle, is_admin, created_at, updated_at)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW())
 	ON CONFLICT (id) DO UPDATE SET
 	    email = EXCLUDED.email,
 	    display_name = EXCLUDED.display_name,
@@ -34,6 +34,7 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 	    total_minutes = EXCLUDED.total_minutes,
 	    xp = EXCLUDED.xp,
 	    telegram_handle = EXCLUDED.telegram_handle,
+	    is_admin = EXCLUDED.is_admin,
 	    updated_at = NOW();
 	`
 
@@ -47,6 +48,7 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 		u.TotalMinutes,
 		u.XP,
 		u.TelegramHandle,
+		u.IsAdmin,
 	)
 
 	if err != nil {
@@ -66,7 +68,7 @@ func (r *PostgresUserRepo) Save(u *user.User) error {
 func (r *PostgresUserRepo) Get(id string) (*user.User, error) {
 	const q = `
 	SELECT id, email, display_name, password_hash,
-	       streak_current_days, streak_last_date, total_minutes, xp, telegram_handle
+	       streak_current_days, streak_last_date, total_minutes, xp, telegram_handle, is_admin
 	FROM users
 	WHERE id = $1;
 	`
@@ -88,6 +90,7 @@ func (r *PostgresUserRepo) Get(id string) (*user.User, error) {
 		&u.TotalMinutes,
 		&u.XP,
 		&u.TelegramHandle,
+		&u.IsAdmin,
 	)
 
 	// null → zero
@@ -112,7 +115,7 @@ func (r *PostgresUserRepo) Get(id string) (*user.User, error) {
 func (r *PostgresUserRepo) FindByEmail(email string) (*user.User, error) {
 	const q = `
 	SELECT id, email, display_name, password_hash,
-	       streak_current_days, streak_last_date, total_minutes, xp, telegram_handle
+	       streak_current_days, streak_last_date, total_minutes, xp, telegram_handle, is_admin
 	FROM users
 	WHERE email = $1;
 	`
@@ -134,6 +137,7 @@ func (r *PostgresUserRepo) FindByEmail(email string) (*user.User, error) {
 		&u.TotalMinutes,
 		&u.XP,
 		&u.TelegramHandle,
+		&u.IsAdmin,
 	)
 
 	if streakLastDate != nil {
@@ -154,6 +158,36 @@ func (r *PostgresUserRepo) FindByEmail(email string) (*user.User, error) {
 // ========================================
 // Check if email exists
 // ========================================
+func (r *PostgresUserRepo) ListAll() ([]*user.User, error) {
+	const q = `SELECT id, email, display_name, password_hash, streak_current_days, streak_last_date, total_minutes, xp, telegram_handle, is_admin FROM users ORDER BY created_at DESC;`
+	rows, err := r.db.Query(q)
+	if err != nil {
+		return nil, core.New(core.ServerError, "failed to list users")
+	}
+	defer rows.Close()
+	var list []*user.User
+	for rows.Next() {
+		var u user.User
+		var streakLastDate *time.Time
+		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.PasswordHash, &u.StreakCurrentDays, &streakLastDate, &u.TotalMinutes, &u.XP, &u.TelegramHandle, &u.IsAdmin); err != nil {
+			continue
+		}
+		if streakLastDate != nil {
+			u.StreakLastDate = streakLastDate
+		}
+		list = append(list, &u)
+	}
+	return list, nil
+}
+
+func (r *PostgresUserRepo) Delete(id string) error {
+	_, err := r.db.Exec("DELETE FROM users WHERE id = $1", id)
+	if err != nil {
+		return core.New(core.ServerError, "failed to delete user")
+	}
+	return nil
+}
+
 func (r *PostgresUserRepo) Exists(email string) (bool, error) {
 	const q = `SELECT 1 FROM users WHERE email = $1 LIMIT 1;`
 

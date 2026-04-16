@@ -103,6 +103,10 @@ func (s *Server) RegisterRoutes() {
 	auth.GET("/competitions/my", handlers.ListMyCompetitions(listMyCompetitionsHandler))
 	auth.POST("/gifts/:giftId/confirm", handlers.ConfirmGift(competitionRepo))
 
+	// ---- Admin endpoints (require is_admin) ----
+	auth.GET("/admin/users", handlers.AdminListUsers(userRepo))
+	auth.DELETE("/admin/users/:id", handlers.AdminDeleteUser(userRepo))
+
 	// === AUTO-CLOSE SCHEDULER ===
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)

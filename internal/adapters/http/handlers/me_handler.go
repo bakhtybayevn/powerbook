@@ -36,6 +36,7 @@ func GetMe(repo ports.UserRepository) gin.HandlerFunc {
 			"level":           u.Level(),
 			"level_name":      u.LevelName(),
 			"telegram_handle": u.TelegramHandle,
+			"is_admin":        u.IsAdmin,
 		})
 	}
 }
