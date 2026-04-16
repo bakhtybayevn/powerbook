@@ -11,11 +11,12 @@ import (
 )
 
 type LeaderboardHandler struct {
-	LB ports.LeaderboardPort
+	LB       ports.LeaderboardPort
+	UserRepo ports.UserRepository
 }
 
-func NewLeaderboardHandler(lb ports.LeaderboardPort) *LeaderboardHandler {
-	return &LeaderboardHandler{LB: lb}
+func NewLeaderboardHandler(lb ports.LeaderboardPort, userRepo ports.UserRepository) *LeaderboardHandler {
+	return &LeaderboardHandler{LB: lb, UserRepo: userRepo}
 }
 
 // GetLeaderboard godoc
@@ -49,10 +50,15 @@ func (h *LeaderboardHandler) GetLeaderboard(c *gin.Context) {
 
 	out := make([]gin.H, 0, len(rows))
 	for i, r := range rows {
+		displayName := "Unknown"
+		if u, err := h.UserRepo.Get(r.UserID); err == nil {
+			displayName = u.DisplayName
+		}
 		out = append(out, gin.H{
-			"rank":    i + 1,
-			"user_id": r.UserID,
-			"points":  r.Score,
+			"rank":         i + 1,
+			"user_id":      r.UserID,
+			"display_name": displayName,
+			"points":       r.Score,
 		})
 	}
 

@@ -63,7 +63,7 @@ func (s *Server) RegisterRoutes() {
 	lbHealth := middleware.RedisHealth(redisLB)
 
 	// === HANDLERS ===
-	leaderboardHandler := handlers.NewLeaderboardHandler(redisLB)
+	leaderboardHandler := handlers.NewLeaderboardHandler(redisLB, userRepo)
 
 	// === USE CASES ===
 	registerUserHandler := appUser.NewRegisterUserHandler(userRepo)
@@ -81,6 +81,10 @@ func (s *Server) RegisterRoutes() {
 	// ---- Public endpoints ----
 	v1.POST("/users/register", handlers.RegisterUser(registerUserHandler))
 	v1.POST("/users/login", handlers.LoginUser(loginUserHandler))
+	v1.GET("/users/:id", handlers.GetUserProfile(userRepo))
+	v1.GET("/competitions", handlers.ListAllCompetitions(listAllCompetitionsHandler))
+	v1.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
+	v1.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
 
 	// ---- Protected endpoints ----
 	auth := v1.Group("/")
@@ -91,9 +95,6 @@ func (s *Server) RegisterRoutes() {
 	auth.POST("/competitions/create", handlers.CreateCompetition(createCompetitionHandler))
 	auth.POST("/competitions/:id/join", handlers.JoinCompetition(joinCompetitionHandler))
 	auth.POST("/competitions/:id/close", handlers.CloseCompetition(closeCompetitionHandler))
-	auth.GET("/competitions/:id/leaderboard", lbHealth, leaderboardHandler.GetLeaderboard)
 	auth.GET("/competitions/:id/rank/me", lbHealth, leaderboardHandler.GetRankMe)
-	auth.GET("/competitions/:id/rank/:userID", lbHealth, leaderboardHandler.GetRank)
-	auth.GET("/competitions", handlers.ListAllCompetitions(listAllCompetitionsHandler))
 	auth.GET("/competitions/my", handlers.ListMyCompetitions(listMyCompetitionsHandler))
 }

@@ -59,6 +59,12 @@ type CompetitionDTO struct {
 }
 
 func UserToPublicDTO(u *user.User) PublicUserDTO {
+	if u == nil {
+		return PublicUserDTO{
+			ID:          "",
+			DisplayName: "Unknown",
+		}
+	}
 	return PublicUserDTO{
 		ID:          u.ID,
 		DisplayName: u.DisplayName,
