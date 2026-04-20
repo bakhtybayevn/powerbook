@@ -80,14 +80,14 @@ func ConfirmGift(repo ports.CompetitionRepository) gin.HandlerFunc {
 
 		if userID == g.GiverID {
 			g.GiverConfirmed = true
-			if req.GiftDescription != "" {
-				g.GiftDescription = req.GiftDescription
-			}
 		} else if userID == g.ReceiverID {
 			g.ReceiverConfirmed = true
 		} else {
 			c.Error(core.New(core.AuthError, "you are not part of this gift exchange"))
 			return
+		}
+		if req.GiftDescription != "" {
+			g.GiftDescription = req.GiftDescription
 		}
 
 		if err := repo.UpdateGiftExchange(g); err != nil {
